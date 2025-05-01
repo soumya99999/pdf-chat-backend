@@ -9,6 +9,7 @@ class DocumentResponse(BaseModel):
     id: int
     filename: str
     upload_date: datetime
+    cloudinary_url: str
 
     class Config:
         from_attributes = True  # updated for Pydantic v2

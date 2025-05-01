@@ -11,3 +11,4 @@ langchain-core>=0.1.14
 langchain-ollama>=0.1.0
 llama-index>=0.10.0
 ollama
+cloudinary

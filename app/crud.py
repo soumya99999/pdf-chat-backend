@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from app import models, schemas
 
-def create_document(db: Session, filename: str, content: str):
-    db_doc = models.Document(filename=filename, content=content)
+def create_document(db: Session, filename: str, content: str, cloudinary_url: str):
+    db_doc = models.Document(filename=filename, content=content, cloudinary_url=cloudinary_url)
     db.add(db_doc)
     db.commit()
     db.refresh(db_doc)

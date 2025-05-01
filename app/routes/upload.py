@@ -1,10 +1,9 @@
-import os
 import logging
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 from app import crud, schemas, config
 from app.database import get_db
-from app.services import pdf_processor
+from app.services import pdf_processor, cloudinary_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -22,36 +21,34 @@ async def upload_pdf(
         logger.warning(f"Rejected upload due to unsupported file type: {file.filename}")
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
-    file_location = os.path.join(config.UPLOAD_DIR, file.filename)
-    logger.info(f"File will be saved to: {file_location}")
-
-    if os.path.exists(file_location):
-        logger.warning(f"Rejected upload because file already exists: {file_location}")
-        raise HTTPException(status_code=400, detail="File with this name already exists")
-
     try:
-        with open(file_location, "wb") as f:
-            content = await file.read()
-            f.write(content)
-        logger.info(f"File saved successfully: {file_location}")
+        content = await file.read()
     except Exception as e:
-        logger.error(f"Failed to save file: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
+        logger.error(f"Failed to read file content: {e}")
+        raise HTTPException(status_code=500, detail="Failed to read file content")
 
     try:
-        text = pdf_processor.extract_text_from_pdf(file_location)
+        text = pdf_processor.extract_text_from_pdf_bytes(content)
         logger.info(f"Extracted text from PDF: {file.filename}")
     except Exception as e:
-        os.remove(file_location)
         logger.error(f"Failed to extract text from PDF: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to extract text from PDF: {str(e)}")
 
     try:
-        db_doc = crud.create_document(db, filename=file.filename, content=text)
+        cloudinary_url = cloudinary_service.upload_pdf_to_cloudinary(content, file.filename)
+        logger.info(f"Uploaded PDF to Cloudinary: {cloudinary_url}")
+    except RuntimeError as e:
+        logger.error(f"Cloudinary upload failed: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error during Cloudinary upload: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload PDF to Cloudinary")
+
+    try:
+        db_doc = crud.create_document(db, filename=file.filename, content=text, cloudinary_url=cloudinary_url)
         logger.info(f"Saved document metadata to database: {file.filename}")
     except Exception as e:
-        os.remove(file_location)
         logger.error(f"Failed to save document metadata: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to save document metadata: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save document metadata: {str(e)}")
 
     return db_doc

@@ -11,3 +11,4 @@ class Document(Base):
     filename = Column(String, unique=True, index=True, nullable=False)
     upload_date = Column(DateTime, default=datetime.utcnow)
     content = Column(Text, nullable=True)  # extracted text content of the PDF
+    cloudinary_url = Column(String, nullable=False)  # URL of the PDF stored in Cloudinary
