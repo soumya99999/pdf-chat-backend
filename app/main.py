@@ -7,7 +7,7 @@ app = FastAPI(title="Fullstack Internship Assignment API")
 
 # CORS setup
 origins = [
-    "http://localhost:5173",  # React frontend URL
+    "http://localhost:5173", "https://pdf-chat-frontend-nu.vercel.app" # React frontend URL
 ]
 
 app.add_middleware(
