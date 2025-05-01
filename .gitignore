@@ -113,3 +113,4 @@ uploads/
 *.sln
 *.sw?
 .env
+venv
