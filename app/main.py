@@ -7,15 +7,17 @@ app = FastAPI(title="Fullstack Internship Assignment API")
 
 # CORS setup
 origins = [
-    "http://localhost:5173", "https://pdf-chat-frontend-nu.vercel.app" # React frontend URL
+    "http://localhost:5173",  # Local development
+    "https://pdf-chat-frontend-nu.vercel.app",  # Production frontend
+    "https://pdf-chat-backend-czju.onrender.com"  # Production backend
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Allows requests from React frontend
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Initialize database tables
